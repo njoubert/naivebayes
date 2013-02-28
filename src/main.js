@@ -1,5 +1,5 @@
 
-var nb = require('./nb.js');
+// var nb = require('./nb.js');
 
 
 console.log('Boolean Naive Bayes Classifier');
@@ -24,6 +24,7 @@ console.log('Boolean Naive Bayes Classifier');
 //
 // 4. Given a observed set, calculate a probability of each cause
 
+ZERO_PROBABILITY = 1e-5;
 
 var inputs = [
 	["spam", "DO YOU WANT TO BUY VIAGRA FOR YOUR PENIS?"],
@@ -140,8 +141,15 @@ function queryMe(query) {
 			}
 			if (!skip) {
 				if (effectsconditioned[word]) {
-					console.log("PC * " + effectsconditioned[word][cause] + " " + word)
-					pc *= effectsconditioned[word][cause];
+					if (effectsconditioned[word][cause] == 0) {
+						//If something actually has zero probability
+						//it drags all the other values down to 0 as well.
+						//We rather assign something an infintesimal P, corresponding
+						//to the fact that we have never seen this happen but we haven't observed everything.
+						pc *= ZERO_PROBABILITY;
+					} else {
+						pc *= effectsconditioned[word][cause];
+					}
 
 				}
 
@@ -157,6 +165,9 @@ function queryMe(query) {
 var testQuery = "Hey Niels. This is Pags. Can we ride motorcycles tomorrow?";
 queryMe(testQuery);
 
-var tQ2 = "Do you wanna buy viagra? bigger! stronger! it makes  go fast! big! stronger!";
+var tQ2 = "Do you wanna buy viagra? bigger! stronger! it makes w go fast! big! stronger!";
 queryMe(tQ2);
 
+
+var tQ3 = "Do you wanna buy viagra? fast motorcycles awaits!";
+queryMe(tQ3);
