@@ -8,7 +8,7 @@ This is a simple naive bayes classifier as inpired by the Russell and Norvig boo
 
 ## Notes on implementation
 
-In a Naive Bayes chain, P(cause | effect) = P(cause) * P(effect 1 | cause)....P(effect n | cause). 
+In a Naive Bayes chain, P(cause | effects) = P(cause) * P(effect 1 | cause)....P(effect n | cause). 
 Absolute zero has the nasty property of zeroing out the entire chain. Thus if any effect given some cause has not been observed in our training data, we can't classify it at all for an input. A prudent approach here is to assign a very small probability to anything we haven't observed (consider this the background noise of the unobserved parts of the world). This allow us to still classify sentences containing words we haven't seen for a given cause.
 
 A different way to implement the multiplication is by using logarithms and addition. Multiplying many small probabilities together (imagine 0.1 * 0.1 * 0.1 * ...) tends toward zero, causing underflow. By using logarithms, we can avoid this.

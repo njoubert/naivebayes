@@ -1,6 +1,10 @@
+var repl = require("repl");
 
-// var nb = require('./nb.js');
 
+var NBClassifier = require('./nb.js');
+
+
+var c1 = NBClassifier();
 
 console.log('Boolean Naive Bayes Classifier');
 
@@ -24,7 +28,7 @@ console.log('Boolean Naive Bayes Classifier');
 //
 // 4. Given a observed set, calculate a probability of each cause
 
-ZERO_PROBABILITY = 1e-5;
+
 
 var inputs = [
 	["spam", "DO YOU WANT TO BUY VIAGRA FOR YOUR PENIS?"],
@@ -38,136 +42,19 @@ var inputs = [
 	["ads","Offers featured in this email are only intended for njoubert@gmail.com. Forwarded recipients are not eligible to get the offers via this email. Thanks to our Cardmembers, J.D. Power and Associates has ranked us Highest in Customer Satisfaction with Credit Card Companies, Six Years in a Row. Learn more about this award: americanexpress.com/jdpower American Express received the highest numerical score among credit card issuers in the proprietary J.D. Power and Associates 2007-2012 Credit Card Satisfaction StudiesSM. 2012 study based on responses from 13,726 consumers measuring 11 card issuers, and measures opinions of consumers about the issuer of their primary credit card. Proprietary study results are based on experiences and perceptions of consumers surveyed in June 2012. Your experiences may vary. Visit jdpower.com."],
 ].map(function(arr) {
 	arr[1] = arr[1].split(" ");
+	c1.teach(arr[0],arr[1]);
 	return arr;
 });
 
+function testQ(string) {
 
-const COMMON_WORDS = ("the of an a to in is you that it he was for on are as with his they I "
-                + "at be this have from or one had by word but not what all were we when your can said "
-                + "there use an each which she do how their if will up other about out many then them these so "
-                + "some her would make like him into time has look two more write go see number no way could people "
-                + "my than first ZZwater been call who ZZoil its now find long down day did get come made may part "
-                + "this and").split(" ");
-
-//Lets build up all the probability tables:
-
-function fix_format(word) {
-	return word.toLowerCase().replace(/[^0-9a-z-]/g,"");
-}
-
-
-//First, what is the probability of each cause:
-
-var causes = {};
-for (var i = 0; i < inputs.length; i++) {
-	var cause = inputs[i][0];
-	if (causes[cause]) {
-		causes[cause] += 1
-	} else {
-		causes[cause] = 1;
-	}
-}
-for (var cause in causes) {
-	causes[cause] = causes[cause]/inputs.length;
-}
-
-
-// Now we build up the probability of each 
-
-
-var effectsconditioned = {};
-for (var i = 0; i < inputs.length; i++) {
-	
-	var input = inputs[i];
-	var cause = input[0];
-
-	for (var j = 0; j < input[1].length; j++) {
-		var word = fix_format(input[1][j]);
-		
-		var skip = false;
-		for (var s = 0; s < COMMON_WORDS.length; s++) {
-			if (word == COMMON_WORDS[s]) {
-				skip = true;
-			}
-		}
-
-		if (!skip) {
-
-			if (!effectsconditioned[word]) {
-				var newlist = {};
-				for (var c in causes) {
-					newlist[c] = 0;
-				}
-				effectsconditioned[word] = newlist;
-			}
-			effectsconditioned[word][cause] += 1;
-
-		}
-
-	}
+	console.log("[CLASSIFY]", string);
+	console.log(c1.query(string.split(" ")));
 
 }
 
-for (var word in effectsconditioned) {
-	var causesw = effectsconditioned[word];
-	var total = 0;
-	for (var i in causesw) {
-		total += causesw[i];
-	}
-	for (var i in causesw) {
-		causesw[i] = causesw[i]/total;
-	}
-}
+testQ("Hey Niels. This is Pags. Can we ride motorcycles tomorrow?");
 
+testQ("Do you wanna buy viagra? bigger! stronger! it makes w go fast! big! stronger!");
 
-
-//OK, so we can try to make a query now:
-//Lets just take the text of one of the training sets and query that.
-
-function queryMe(query) {
-	console.log("Querying: " + query);
-	query = query.split(" ");
-	for (var cause in causes) {
-
-		var pc = causes[cause];
-		for (var i in query) {
-			var word = fix_format(query[i]);
-
-			var skip = false;
-			for (var s = 0; s < COMMON_WORDS.length; s++) {
-				if (word == COMMON_WORDS[s]) {
-					skip = true;
-				}
-			}
-			if (!skip) {
-				if (effectsconditioned[word]) {
-					if (effectsconditioned[word][cause] == 0) {
-						//If something actually has zero probability
-						//it drags all the other values down to 0 as well.
-						//We rather assign something an infintesimal P, corresponding
-						//to the fact that we have never seen this happen but we haven't observed everything.
-						pc *= ZERO_PROBABILITY;
-					} else {
-						pc *= effectsconditioned[word][cause];
-					}
-
-				}
-
-			}
-		}
-		console.log("Cause " + cause + " = " + pc);
-
-
-	}
-
-}
-
-var testQuery = "Hey Niels. This is Pags. Can we ride motorcycles tomorrow?";
-queryMe(testQuery);
-
-var tQ2 = "Do you wanna buy viagra? bigger! stronger! it makes w go fast! big! stronger!";
-queryMe(tQ2);
-
-
-var tQ3 = "Do you wanna buy viagra? fast motorcycles awaits!";
-queryMe(tQ3);
+testQ("Do you wanna buy viagra? fast motorcycles awaits!");
